@@ -14,6 +14,9 @@ app = FastAPI(
 app.include_router(task_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
 
+@app.get("/")
+def get_root():
+    return ({"message":f"Welcome to the {app.title} API", "version": app.version})
 
 @app.get("/scalar")
 def get_scalar():
