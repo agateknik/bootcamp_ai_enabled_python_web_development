@@ -1,0 +1,51 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift idea</title>
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+
+    
+    <!-- Custom config (optional) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#64748b',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="max-w-2xl m-auto space-y-4 mt-10">
+        <section>
+            <h1 class="text-2xl font-mono font-semibold">GIFT IDEA FOR YOU</h1>
+            <div class="mt-4 prose">
+                <h3 class=" uppercase">🎁 {{ gift.event }}</h3>
+                <p class="text-zinc-600 mt-1"><strong>Budget:</strong> Rp {{ gift.budget }}</p>
+                <hr class="my-4">
+                <p class="font-semibold">Rekomendasi Hadiah:</p>
+                <ul class="list-disc pl-5 mt-2 space-y-2">
+                    {% for g in gift.gifts %}
+                    <li>
+                        <strong>{{ g.idea }}</strong><br>
+                        <span class="text-zinc-500">Harga: Rp {{ g.cost }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+        <a href="/gift-idea" class="inline-block mt-4 px-4 py-2 bg-cyan-400 hover:bg-cyan-500 text-white rounded-lg">Need other gift idea</a>
+        
+</div>
+</body>
+</html>
