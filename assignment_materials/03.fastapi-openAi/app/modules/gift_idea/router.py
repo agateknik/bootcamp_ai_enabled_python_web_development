@@ -1,4 +1,3 @@
-import markdown
 from fastapi import APIRouter, Form, Request
 from fastapi.templating import Jinja2Templates
 
