@@ -1,13 +1,10 @@
-## ASSIGNMENT 1
+### Praktek membuat otentikasi dan otorisasi di fastAPI
 
-#### Membuat endpoint dengan fast API menggunakan database Sqlite juga SQLmodel ORM, dan Alembic migration manager
+- Sistem app sederhana task-management
+- Menggunakan bcrypt untuk hash.
+- Menggunakan python-jose[cryptography] untuk jwt.
+- Implementasi role "admin" dan "user".
+- Logic:
+    -   User hanya bisa akses api/tasks [get, create, update, delete] untuk  tasknya masing-masing.
+    -   Endpoint api/users hanya bisa diakses user yang memiliki role "admin".
 
-- 2 endpoint @min (get, post)
-
-```
-uv init
-
-uv add uvicorn fastapi scalar-fastapi pydantic pydantic-settings alembic sqlmodel
-
-uv run uvicorn app.main:app --reload
-```

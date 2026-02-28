@@ -218,3 +218,4 @@ __marimo__/
 
 # Python version files (uncomment if you want to ignore)
 # .python-version
+.db
