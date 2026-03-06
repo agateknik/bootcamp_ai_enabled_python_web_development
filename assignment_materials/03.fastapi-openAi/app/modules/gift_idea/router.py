@@ -10,20 +10,19 @@ template = Jinja2Templates("app/templates")
 gift_router = APIRouter(prefix="/gift-idea")
 
 
-@gift_router.get("")
+@gift_router.get("/form")
 def get_idea(request: Request):
     return template.TemplateResponse("index.html", {"request": request})
 
 
-@gift_router.post("")
-def create_idea(request: Request, gift_idea=Form(None), budget=Form(None)):
+@gift_router.post("/result")
+def get_result(request: Request, gift_idea=Form(None), budget=Form(None)):
     res = client.chat.completions.parse(
-        model="openai/gpt-5.1-chat",
+        model="openai/gpt-4o",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"gift idea: {gift_idea}, budget: {budget}"},
         ],
-        extra_body={"reasoning": {"enabled": True}},
         response_format=Gift_Idea,
     )
     result = res.choices[0].message.parsed
