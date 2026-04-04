@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        header h1 { font-size: 18px; font-weight: 600; }
+        header span { font-size: 13px; color: #888; }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .msg {
+            max-width: 720px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .msg.user {
+            align-self: flex-end;
+            background: #1a5c2e;
+            color: #e0e0e0;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.assistant {
+            align-self: flex-start;
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-bottom-left-radius: 4px;
+        }
+        .msg.tool {
+            align-self: flex-start;
+            background: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            font-size: 12px;
+            color: #9090d0;
+            font-family: monospace;
+        }
+        .msg.tool .tool-name { color: #7890f0; font-weight: 600; }
+        .typing {
+            align-self: flex-start;
+            display: flex;
+            gap: 4px;
+            padding: 16px;
+        }
+        .typing span {
+            width: 8px; height: 8px;
+            background: #555;
+            border-radius: 50%;
+            animation: blink 1.2s infinite;
+        }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%,80%,100% { opacity: 0.3; } 40% { opacity: 1; } }
+
+        #input-area {
+            padding: 16px 24px;
+            border-top: 1px solid #2a2a2a;
+            display: flex;
+            gap: 8px;
+        }
+        #session_id {
+            width: 140px;
+            padding: 10px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            outline: none;
+        }
+        #session_id:focus { border-color: #4a4a4a; }
+        #message {
+            flex: 1;
+            padding: 10px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            outline: none;
+            resize: none;
+        }
+        #message:focus { border-color: #4a4a4a; }
+        #send {
+            padding: 10px 20px;
+            background: #1a5c2e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        #send:hover { background: #1e7a38; }
+        #send:disabled { background: #333; color: #666; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Shopping Assistant</h1>
+        <span>AI-powered product search &amp; comparison</span>
+    </header>
+    <div id="messages"></div>
+    <div id="input-area">
+        <input id="session_id" type="text" placeholder="Session ID" value="default">
+        <input id="message" type="text" placeholder="Ask about products, prices, comparisons..." autofocus>
+        <button id="send">Send</button>
+    </div>
+    <script>
+        const messagesEl = document.getElementById('messages');
+        const messageInput = document.getElementById('message');
+        const sessionIdInput = document.getElementById('session_id');
+        const sendBtn = document.getElementById('send');
+
+        function addMsg(text, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.textContent = text;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return div;
+        }
+
+        function addTyping() {
+            const div = document.createElement('div');
+            div.className = 'typing';
+            div.id = 'typing';
+            div.innerHTML = '<span></span><span></span><span></span>';
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function removeTyping() {
+            document.getElementById('typing')?.remove();
+        }
+
+        async function send() {
+            const msg = messageInput.value.trim();
+            if (!msg) return;
+            const sid = sessionIdInput.value.trim() || 'default';
+
+            addMsg(msg, 'user');
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            addTyping();
+
+            let assistantMsg = null;
+
+            try {
+                const res = await fetch('/chats/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message: msg })
+                });
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.type === 'text_delta') {
+                            removeTyping();
+                            if (!assistantMsg) assistantMsg = addMsg('', 'assistant');
+                            assistantMsg.textContent += data.delta;
+                            messagesEl.scrollTop = messagesEl.scrollHeight;
+                        }
+
+                        if (data.type === 'tool_call') {
+                            removeTyping();
+                            addMsg(`\u{1F527} ${data.tool_name}: ${data.argument}`, 'tool');
+                        }
+                    }
+                }
+            } catch (err) {
+                removeTyping();
+                addMsg('Error: ' + err.message, 'assistant');
+            } finally {
+                removeTyping();
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', send);
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+    </script>
+</body>
+</html>

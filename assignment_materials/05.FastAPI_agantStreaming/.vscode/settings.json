@@ -1,0 +1,7 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "explicit",
+        "source.organizeImports.ruff": "explicit"
+    },
+    "djlint.showInstallError": false
+}
